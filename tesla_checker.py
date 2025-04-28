@@ -1,65 +1,65 @@
-import time, requests
+import time, requests, json
 
-# ▶ Telegram bilgilerin
-TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"      # Bot tokenını buraya yaz
-USER_ID = "6944382551"             # Kendi chat-id’in
+TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"      # Telegram
+USER_ID = "6944382551"
 
-# ▶ İzlenecek sayfa
-TESLA_URL = (
-    "https://www.tesla.com/tr_TR/inventory/new/my"
-    "?arrangeby=plh&zip=34000&range=0"
-)
+URL = "https://www.tesla.com/inventory/api/v1/inventory-results"
+BODY = {
+    "query": {
+        "model": "my",
+        "condition": "new",
+        "arrangeby": "plh",
+        "order": "asc",
+        "market": "TR",
+        "language": "tr",
+        "super_region": "EMEA",
+        "zip": "34000",
+        "range": 0
+    },
+    "offset": 0,
+    "count": 20
+}
 
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-    )
+    ),
+    "Content-Type": "application/json"
 }
 
-def send(msg: str) -> None:
-    r = requests.post(
+def send(txt: str):
+    requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        data={"chat_id": USER_ID, "text": msg},
+        data={"chat_id": USER_ID, "text": txt},
         timeout=10,
     )
-    print("Telegram OK" if r.ok else f"Telegram HATA {r.status_code}: {r.text[:120]}")
 
-def check_once() -> None:
-    for attempt in range(3):                       # en fazla 3 deneme
+def check_once():
+    for i in range(3):
         try:
-            resp = requests.get(
-                TESLA_URL,
-                headers=HEADERS,
-                timeout=60        # 60 sn
-            )
-            html = resp.text.lower()
-            break                 # başarılıysa döngüden çık
-        except requests.exceptions.RequestException as e:
-            print(f"Deneme {attempt+1}/3 hata:", e)
-            time.sleep(5)         # 5 sn bekleyip tekrar dene
+            r = requests.post(URL, headers=HEADERS, data=json.dumps(BODY), timeout=20)
+            r.raise_for_status()
+            data = r.json()
+            break
+        except Exception as e:
+            print(f"Deneme {i+1}/3 hata:", e)
+            time.sleep(3)
     else:
-        print("➡ Tesla sayfasına ulaşılamadı, döngü kapanıyor.")
+        print("➡ Tesla API erişilemedi, sonraki döngü.")
         return
 
-    if ("no inventory available" in html or
-        "mevcut araç bulunamadı" in html):
-        print("Stok bulunamadı.")
-    else:
+    if data.get("results"):
         print("STOK BULUNDU!  Telegram gönderildi")
-        send(f"🚗 Tesla stokta araç bulundu!\n{TESLA_URL}")
-
-
-    if "no inventory available" in html or "mevcut araç bulunamadı" in html:
-        print("Stok bulunamadı.")
+        send("🚗 Tesla stokta araç bulundu!\nhttps://www.tesla.com/tr_TR/inventory/new/my?zip=34000")
     else:
-        print("STOK BULUNDU!  → Telegram gönderildi")
-        send(f"🚗 Tesla stokta araç bulundu!\n{TESLA_URL}")
+        print("Stok bulunamadı.")
 
 if __name__ == "__main__":
     while True:
         try:
             check_once()
         except Exception as e:
-            print("Hata:", e)
-        time.sleep(300)          # 5 dk’da bir kontrol
+            print("Genel Hata:", e)
+        time.sleep(300)        # 5 dk
+
