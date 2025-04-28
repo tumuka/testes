@@ -1,59 +1,43 @@
-import asyncio
-from playwright.async_api import async_playwright
-import requests
+import time, requests
 
-# ❶ Telegram
-TELEGRAM_BOT_TOKEN = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"
-TELEGRAM_USER_ID   = "6944382551"
+# ▶ Telegram bilgilerin
+TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"      # Bot tokenını buraya yaz
+USER_ID = "6944382551"             # Kendi chat-id’in
 
-# ❷ Browserless
-BROWSERLESS_WS_ENDPOINT = "wss://playwright.browserless.io?token=SDHJ6gIu79Ys4q06e3e4de0e2ffce5502462e479ae"
-
-# ❸ Tesla URL
-TESLA_INVENTORY_URL = (
-    "https://www.tesla.com/tr_TR/inventory/new/my?arrangeby=plh&zip=34000&range=0"
+# ▶ İzlenecek sayfa
+TESLA_URL = (
+    "https://www.tesla.com/tr_TR/inventory/new/my"
+    "?arrangeby=plh&zip=34000&range=0"
 )
 
-async def check_tesla_inventory() -> None:
-    async with async_playwright() as p:
-        # Browserless’a bağlan
-        browser = await p.connect(BROWSERLESS_WS_ENDPOINT)
-        page = await browser.new_page()
-        await page.goto(TESLA_INVENTORY_URL, timeout=45_000)
-        await page.wait_for_timeout(5_000)
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    )
+}
 
-        html = await page.content()
-
-        if (
-            "No Inventory Available" in html
-            or "Mevcut araç bulunamadı" in html
-        ):
-            print("Stok bulunamadı.")
-        else:
-            print("STOK BULUNDU!")
-            send_telegram_message(
-                f"🚗 Tesla stokta araç bulundu!\n{TESLA_INVENTORY_URL}"
-            )
-
-        await browser.close()
-
-def send_telegram_message(text: str) -> None:
-    resp = requests.post(
-        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-        data={"chat_id": TELEGRAM_USER_ID, "text": text},
+def send(msg: str) -> None:
+    r = requests.post(
+        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+        data={"chat_id": USER_ID, "text": msg},
         timeout=10,
     )
-    print(
-        "Telegram OK" if resp.ok else f"Telegram HATA: {resp.status_code} {resp.text}"
-    )
+    print("Telegram OK" if r.ok else f"Telegram HATA {r.status_code}: {r.text[:120]}")
+
+def check_once() -> None:
+    html = requests.get(TESLA_URL, headers=HEADERS, timeout=20).text.lower()
+
+    if "no inventory available" in html or "mevcut araç bulunamadı" in html:
+        print("Stok bulunamadı.")
+    else:
+        print("STOK BULUNDU!  → Telegram gönderildi")
+        send(f"🚗 Tesla stokta araç bulundu!\n{TESLA_URL}")
 
 if __name__ == "__main__":
-    async def main() -> None:
-        while True:
-            try:
-                await check_tesla_inventory()
-            except Exception as e:
-                print("Hata →", e)
-            await asyncio.sleep(300)   # 5 dk
-
-    asyncio.run(main())
+    while True:
+        try:
+            check_once()
+        except Exception as e:
+            print("Hata:", e)
+        time.sleep(300)          # 5 dk’da bir kontrol
