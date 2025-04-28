@@ -59,4 +59,4 @@ def check_once():
 if __name__ == "__main__":
     while True:
         check_once()
-        time.sleep(300)         # 5 dk
+        time.sleep(600)         # 10 dk
