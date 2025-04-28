@@ -26,7 +26,29 @@ def send(msg: str) -> None:
     print("Telegram OK" if r.ok else f"Telegram HATA {r.status_code}: {r.text[:120]}")
 
 def check_once() -> None:
-    html = requests.get(TESLA_URL, headers=HEADERS, timeout=20).text.lower()
+    for attempt in range(3):                       # en fazla 3 deneme
+        try:
+            resp = requests.get(
+                TESLA_URL,
+                headers=HEADERS,
+                timeout=60        # 60 sn
+            )
+            html = resp.text.lower()
+            break                 # başarılıysa döngüden çık
+        except requests.exceptions.RequestException as e:
+            print(f"Deneme {attempt+1}/3 hata:", e)
+            time.sleep(5)         # 5 sn bekleyip tekrar dene
+    else:
+        print("➡ Tesla sayfasına ulaşılamadı, döngü kapanıyor.")
+        return
+
+    if ("no inventory available" in html or
+        "mevcut araç bulunamadı" in html):
+        print("Stok bulunamadı.")
+    else:
+        print("STOK BULUNDU!  Telegram gönderildi")
+        send(f"🚗 Tesla stokta araç bulundu!\n{TESLA_URL}")
+
 
     if "no inventory available" in html or "mevcut araç bulunamadı" in html:
         print("Stok bulunamadı.")
