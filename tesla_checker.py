@@ -40,4 +40,9 @@ def send_telegram_message(message):
         print("Telegram mesajı gönderildi.")
 
 if __name__ == "__main__":
-    asyncio.run(check_tesla_inventory())
+    async def main():
+        while True:
+            await check_tesla_inventory()
+            await asyncio.sleep(300)  # 5 dakika bekle (300 saniye)
+
+    asyncio.run(main())
