@@ -38,14 +38,17 @@ def check_once():
         "https://api.scrapingant.com/v2/general"
         f"?x-api-key={ANT_KEY}"
         "&url=https://www.tesla.com/inventory/api/v1/inventory-results"
+        "&method=POST&body_type=raw"
+        "&headers=Content-Type:%20application/json"
     )
-
     try:
-        resp = requests.post(url, headers=HEADERS, data=json.dumps(BODY), timeout=30)
+        resp = requests.post(url, data=json.dumps(BODY), timeout=30)
         data = resp.json()
-    except Exception as e:
-        print("Hata:", e)
+    except ValueError:
+        print("Beklenmeyen cevap:", resp.status_code, resp.text[:120])
         return
+    ...
+
 
     if data.get("results"):
         print("STOK BULUNDU!  Telegram gönderildi")
