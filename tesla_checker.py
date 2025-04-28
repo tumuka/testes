@@ -1,9 +1,13 @@
 import time, requests, json
 
-TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"      # Telegram
+# Telegram
+TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"          # Bot token
 USER_ID = "6944382551"
 
-URL = "https://www.tesla.com/inventory/api/v1/inventory-results"
+# ScrapingAnt ücretsiz API anahtarın
+ANT_KEY = "1cf224181d6449fc9a268944f5bc7f7d"
+
+# Tesla API body (değişmedi)
 BODY = {
     "query": {
         "model": "my",
@@ -20,33 +24,27 @@ BODY = {
     "count": 20
 }
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-    ),
-    "Content-Type": "application/json"
-}
+HEADERS = {"Content-Type": "application/json"}
 
-def send(txt: str):
+def send(msg: str):
     requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        data={"chat_id": USER_ID, "text": txt},
+        data={"chat_id": USER_ID, "text": msg},
         timeout=10,
     )
 
 def check_once():
-    for i in range(3):
-        try:
-            r = requests.post(URL, headers=HEADERS, data=json.dumps(BODY), timeout=20)
-            r.raise_for_status()
-            data = r.json()
-            break
-        except Exception as e:
-            print(f"Deneme {i+1}/3 hata:", e)
-            time.sleep(3)
-    else:
-        print("➡ Tesla API erişilemedi, sonraki döngü.")
+    url = (
+        "https://api.scrapingant.com/v2/general"
+        f"?x-api-key={ANT_KEY}"
+        "&url=https://www.tesla.com/inventory/api/v1/inventory-results"
+    )
+
+    try:
+        resp = requests.post(url, headers=HEADERS, data=json.dumps(BODY), timeout=30)
+        data = resp.json()
+    except Exception as e:
+        print("Hata:", e)
         return
 
     if data.get("results"):
@@ -57,9 +55,5 @@ def check_once():
 
 if __name__ == "__main__":
     while True:
-        try:
-            check_once()
-        except Exception as e:
-            print("Genel Hata:", e)
-        time.sleep(300)        # 5 dk
-
+        check_once()
+        time.sleep(300)         # 5 dk
