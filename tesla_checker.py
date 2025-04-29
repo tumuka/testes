@@ -27,7 +27,7 @@ COMMON = {
     "headers": "Content-Type:application/json",
 
     # ─── İŞE YARAYAN HAVUZ ───
-    "country_code": "nl",        # fr→nl→se→us_residential deneyebilirsiniz
+    "country_code": "us_residential",        # fr→nl→se→us_residential deneyebilirsiniz
     "device_type": "desktop",    # desktop / mobile
     # ──────────────────────────
 
