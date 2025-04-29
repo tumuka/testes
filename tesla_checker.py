@@ -36,9 +36,12 @@ SCRAPER_PARAMS = {
     "method": "POST",
     "body_type": "raw",
     "headers": "Content-Type:application/json",
-    "country_code": "de",       # tr/de/nl/fr …  (engelleme yaşarsanız değiştirin)
-    "render": "false",
+    "country_code": "de",        # ← AB ülkesi
+    "device_type": "mobile",     # ← LTE IP havuzu
+    "render": "false"
+    # "premium": "true"          # ← Seçenek 1 için açın
 }
+
 # ------------------------------------------------------
 
 HEADERS = {"Content-Type": "application/json"}
