@@ -1,5 +1,5 @@
 import time, requests, json
-
+print("Kod başladı")
 # Telegram
 TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"          # Bot token
 USER_ID = "6944382551"
