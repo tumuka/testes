@@ -1,41 +1,56 @@
-import time, json, requests, os
+import os, time, json, requests
 
-TOKEN    = os.environ["TG_TOKEN"]
-USER_ID  = os.environ["TG_USER"]
-KEY      = os.environ["SCRAPER_KEY"]
+# --- ENV değişkenleri ---
+TOKEN   = os.environ["TG_TOKEN"]        # Telegram bot token
+USER_ID = os.environ["TG_USER"]         # Telegram chat-id
+KEY     = os.environ["SCRAPER_KEY"]     # ScraperAPI anahtarı
+# ------------------------
 
 TESLA_URL = "https://www.tesla.com/inventory/api/v1/inventory-results"
+
 BODY = {
     "query": {
-        "model": "my", "condition": "new", "arrangeby": "plh", "order": "asc",
-        "market": "TR", "language": "tr", "super_region": "EMEA", "zip": "34000",
+        "model": "my", "condition": "new",
+        "arrangeby": "plh", "order": "asc",
+        "market": "TR", "language": "tr",
+        "super_region": "EMEA", "zip": "34000",
         "range": 2000, "outsideSearch": True
     },
     "offset": 0, "count": 1000
 }
 
-BASE = "https://api.scraperapi.com/"
-PARAMS = {
+COMMON = {
     "api_key": KEY,
     "url": TESLA_URL,
     "method": "POST",
     "body_type": "raw",
     "headers": "Content-Type:application/json",
-    "country_code": "de",      # farklı ülke kodları deneyebilirsiniz
-    "device_type": "mobile",
+
+    # ─── İŞE YARAYAN HAVUZ ───
+    "country_code": "fr",        # fr→nl→se→us_residential deneyebilirsiniz
+    "device_type": "desktop",    # desktop / mobile
+    # ──────────────────────────
+
     "render": "false",
-    "max_timeout": "25000"
+    "max_timeout": "40000"       # 40 sn ScraperAPI tarafı
 }
 
-def tg(msg:str):
-    requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-                  data={"chat_id": USER_ID, "text": msg}, timeout=10)
+def tg(msg: str) -> None:
+    requests.post(
+        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+        data={"chat_id": USER_ID, "text": msg},
+        timeout=10,
+    )
 
-def fetch():
+def fetch() -> dict | None:
     for i in range(3):
         try:
-            r = requests.post(BASE, params=PARAMS,
-                              data=json.dumps(BODY), timeout=25)
+            r = requests.post(
+                "https://api.scraperapi.com/",
+                params=COMMON,
+                data=json.dumps(BODY),
+                timeout=40        # 40 sn bizim taraf
+            )
             if r.status_code == 200:
                 return r.json()
             print(f"{i+1}/3 → ScraperAPI {r.status_code}, retry…")
@@ -45,7 +60,7 @@ def fetch():
     print("↪ Üst üste 3 hata, döngüde atlandı.")
     return None
 
-def loop():
+def loop() -> None:
     data = fetch()
     if not data:
         return
@@ -53,16 +68,14 @@ def loop():
     print("Toplam sonuç:", total)
     if total:
         tg("🚗 Tesla stokta araç bulundu!\nhttps://www.tesla.com/tr_TR/inventory/new/my?zip=34000")
-        print("STOK BULUNDU! Telegram gönderildi")
-    else:
-        print("Stok bulunamadı.")
 
 if __name__ == "__main__":
-    # Anahtar & çıkış IP testi
-    print("Anahtar testi:",
-          requests.get(f"{BASE}?api_key={KEY}&url=https://httpbin.org/ip").status_code)
-    print("Railway çıkış IP:", requests.get("https://httpbin.org/ip").text.strip())
+    # Anahtarı ve çıkış IP’sini bir kez göster
+    print("Anahtar testi:", requests.get(
+        f"https://api.scraperapi.com/?api_key={KEY}&url=https://httpbin.org/ip"
+    ).status_code)
+    print("Railway çıkış IP:\n", requests.get("https://httpbin.org/ip").text)
+
     while True:
-        print("Kod başladı")
         loop()
-        time.sleep(600)     # 10 dk
+        time.sleep(600)       # 10 dk
