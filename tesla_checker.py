@@ -4,8 +4,7 @@ print("Kod başladı")
 TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"          # Bot token
 USER_ID = "6944382551"
 
-# ScrapingAnt ücretsiz API anahtarın
-ANT_KEY = "1cf224181d6449fc9a268944f5bc7f7d"
+SCRAPER_KEY = "b0794e1bca8dbc04ded56bae2611480a"
 
 # Tesla API body
 BODY = {
@@ -24,15 +23,10 @@ def send(msg):
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         data={"chat_id": USER_ID, "text": msg}, timeout=10
     )
-
+     b0794e1bca8dbc04ded56bae2611480a
 def fetch_inventory():
     url = (
-        "https://api.scrapingant.com/v2/general"
-        f"?x-api-key={ANT_KEY}"
-        "&url=https://www.tesla.com/inventory/api/v1/inventory-results"
-        "&method=POST&body_type=raw"
-        "&headers=Content-Type:%20application/json"
-    )
+        "https://api.scraperapi.com" f"?api_key={SCRAPER_KEY}" "&url=https://www.tesla.com/inventory/api/v1/inventory-results" "&method=POST&body_type=raw" "&headers=Content-Type:application/json" )
     for attempt in range(3):
         r = requests.post(url, headers=HEADERS, data=json.dumps(BODY), timeout=30)
         if r.status_code == 200:
