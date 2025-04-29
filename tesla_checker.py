@@ -48,6 +48,8 @@ def check_once():
     try:
         resp = requests.post(url, data=json.dumps(BODY), timeout=30)
         data = resp.json()
+        print("Debug cevap:", json.dumps(data)[:400])
+
     except ValueError:
         print("Beklenmeyen cevap:", resp.status_code, resp.text[:120])
         return
