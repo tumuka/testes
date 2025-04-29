@@ -1,6 +1,6 @@
 import time, requests, json
 
-print("Kod başladı")
+print("Kod başladı", flush=True)
 
 # Telegram
 TOKEN   = "8117324210:AAGUyfXfnUSmZDKhuvz4VrR0jxYFsnjZ69E"
