@@ -18,11 +18,15 @@ BODY = {
         "language": "tr",
         "super_region": "EMEA",
         "zip": "34000",
-        "range": 0
+
+        # ↓ değişti
+        "range": 2000,          # 2000 km yarıçap
+        "outsideSearch": True   # zip dışındaki stokları da getir
     },
     "offset": 0,
-    "count": 20
+    "count": 1000              # (opsiyonel) daha çok satır çek
 }
+
 
 HEADERS = {"Content-Type": "application/json"}
 
