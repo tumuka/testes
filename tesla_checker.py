@@ -7,7 +7,7 @@ USER_ID = "6944382551"
 # ScrapingAnt ücretsiz API anahtarın
 ANT_KEY = "1cf224181d6449fc9a268944f5bc7f7d"
 
-# Tesla API body (değişmedi)
+# Tesla API body
 BODY = {
     "query": {
         "model": "my",
@@ -18,26 +18,23 @@ BODY = {
         "language": "tr",
         "super_region": "EMEA",
         "zip": "34000",
-
-        # ↓ değişti
-        "range": 2000,          # 2000 km yarıçap
-        "outsideSearch": True   # zip dışındaki stokları da getir
+        "range": 2000,
+        "outsideSearch": True
     },
     "offset": 0,
-    "count": 1000              # (opsiyonel) daha çok satır çek
+    "count": 1000
 }
-
 
 HEADERS = {"Content-Type": "application/json"}
 
-def send(msg: str):
+def send(msg: str) -> None:
     requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         data={"chat_id": USER_ID, "text": msg},
         timeout=10,
     )
 
-def check_once():
+def check_once() -> None:
     url = (
         "https://api.scrapingant.com/v2/general"
         f"?x-api-key={ANT_KEY}"
@@ -45,16 +42,19 @@ def check_once():
         "&method=POST&body_type=raw"
         "&headers=Content-Type:%20application/json"
     )
-    try:
-        resp = requests.post(url, data=json.dumps(BODY), timeout=30)
-        data = resp.json()
-        print("Debug cevap:", json.dumps(data)[:400])
 
+    try:
+        resp = requests.post(
+            url,
+            headers=HEADERS,            # ← eklendi
+            data=json.dumps(BODY),
+            timeout=30,
+        )
+        data = resp.json()
+        print("Debug cevap:", json.dumps(data)[:300])
     except ValueError:
         print("Beklenmeyen cevap:", resp.status_code, resp.text[:120])
         return
-    ...
-
 
     if data.get("results"):
         print("STOK BULUNDU!  Telegram gönderildi")
@@ -65,4 +65,4 @@ def check_once():
 if __name__ == "__main__":
     while True:
         check_once()
-        time.sleep(600)         # 10 dk
+        time.sleep(600)   # 10 dk
